@@ -5,6 +5,10 @@ const express = require("express");
 const { Client, IntentsBitField } = require("discord.js");
 const { exec } = require("child_process");
 
+const router=require('./routes/dataToRoute')
+const {getAllMeets}=require('./controllers/dataToFron')
+
+
 // .env
 require("dotenv").config();
 
@@ -16,8 +20,15 @@ const onlineMember = require("./models/onlineMembers");
 
 // set up express
 const app = express();
+
+
+
 const port = 3000;
 app.use(express.json());
+
+//todo back to front:start
+app.use("/api/v1",router);
+//todo back to front:end
 
 // Create a new client instance
 const client = new Client({
