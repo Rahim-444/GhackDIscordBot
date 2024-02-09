@@ -1,6 +1,8 @@
 const express = require("express");
 const { Client, IntentsBitField } = require("discord.js");
 require("dotenv").config();
+const connectDB = require("./db/connect");
+const voice=require('./models/voice')
 
 const app = express();
 const port = 3000;
@@ -61,7 +63,7 @@ app.get("/getUsersInVoice", (req, res) => {
   client.guilds.cache.each((guild) => {
     guild.members
       .fetch()
-      .then((members) => {
+      .then(async(members) => {
         members.forEach((member) => {
           if (member.voice.channel) {
             counter++;
@@ -70,6 +72,8 @@ app.get("/getUsersInVoice", (req, res) => {
         });
 
         console.log(JSON.stringify(result, null, 2));
+        const from_db = await voice.create(result);//todo rah l db
+        console.log('from db:',from_db)
         console.log("Total users in voice: " + counter);
       })
       .catch((error) => {
@@ -93,9 +97,18 @@ app.get("/joiningDate", () => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+
+async function start() {
+  try {
+    await connectDB(process.env.MONGO_URI); 
+    app.listen(port, () => {
+      console.log(`Example app listening on port ${port}`);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+start();
 
 client.login(
   // eslint-disable-next-line no-undef
