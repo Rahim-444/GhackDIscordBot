@@ -1,5 +1,11 @@
-const Discord = require("discord.js");
+const express = require("express");
 const { Client, IntentsBitField } = require("discord.js");
+require("dotenv").config();
+
+const app = express();
+const port = 3000;
+
+// Create a new client instance
 const client = new Client({
   intents: [
     IntentsBitField.Flags.Guilds,
@@ -13,6 +19,12 @@ const client = new Client({
 
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
+});
+
+// GET online members
+app.get("/online", (req, res) => {
+  const result = {};
+  res.send("Online Members: ");
   let roleCounts = new Map();
 
   client.guilds.cache.each((guild) => {
@@ -33,47 +45,59 @@ client.on("ready", () => {
 
         console.log("Online members by role:");
         roleCounts.forEach((count, role) => {
-          console.log(`${role}: ${count}`);
+          result[role] = count;
         });
+
+        console.log(JSON.stringify(result, null, 2));
       })
       .catch(console.error);
   });
 });
 
-client.on("messageCreate", (message) => {});
-let joinTime;
-client.on("voiceStateUpdate", (oldState, newState) => {
-  let leaveTime;
-  if (!oldState.channel && newState.channel) {
-    console.log(
-      `User ${newState.member.user.tag} has joined the voice channel ${newState.channel.name} at ${newState.channelId}`
-    );
-    joinTime = new Date().getTime();
-    //The `getDay()` method returns the day of the week for the specified date according to local time, where 0 represents Sunday, 1 represents Monday, and so on up to 6 for Saturday.
-    //The `getDate()` method returns the day of the month for the specified date according to local time, as a number between 1 and 31.
-    //So, for example, if a user joined on Monday, the 15th of a month, `getDay()` would return 1 and `getDate()` would return 15.
-    console.log("Day of the week (5 means friday) :");
-    console.log(new Date().getDay());
-  }
-  if (oldState.channel && !newState.channel) {
-    leaveTime = new Date().getTime();
-    //time in seconds
-    let timeInSeconds = (leaveTime - joinTime) / 1000;
-    console.log("time spent in seconds : ");
-    console.log(timeInSeconds);
-    let guild = client.guilds.cache.first();
+app.get("/getUsersInVoice", (req, res) => {
+  let counter = 0;
+  const result = {};
+  res.send("getting users in voice");
+  client.guilds.cache.each((guild) => {
     guild.members
-      .fetch(oldState.id)
-      .then((member) => {
-        console.log(`Roles for user ${member.user.tag}:`);
-        member.roles.cache.each((role) => {
-          console.log(role.name);
+      .fetch()
+      .then((members) => {
+        members.forEach((member) => {
+          if (member.voice.channel) {
+            counter++;
+            result[member.voice.channel.name] = counter;
+          }
         });
+
+        console.log(JSON.stringify(result, null, 2));
+        console.log("Total users in voice: " + counter);
       })
-      .catch(console.error);
-  }
+      .catch((error) => {
+        console.error("Error fetching members:", error);
+      });
+  });
+});
+
+app.get("/joiningDate", () => {
+  let joinTime;
+  client.on("voiceStateUpdate", (oldState, newState) => {
+    let leaveTime;
+    if (!oldState.channel && newState.channel) {
+      console.log(
+        `User ${newState.member.user.tag} has joined the voice channel ${newState.channel.name} at ${newState.channelId}`
+      );
+      joinTime = new Date().getTime();
+      console.log("Day of the week (5 means friday) :");
+      console.log(new Date().getDay());
+    }
+  });
+});
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
 });
 
 client.login(
-  "MTIwNTI1OTc1NDgxNDA1MDM1NA.GVCFsD.rguZMdhy6pIqxpCyjQeLGTmwaZ2PgZoYhhX6rE"
+  // eslint-disable-next-line no-undef
+  process.env.TOKEN
 );
