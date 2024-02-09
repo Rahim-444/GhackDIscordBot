@@ -48,7 +48,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
   let leaveTime;
   if (!oldState.channel && newState.channel) {
     console.log(
-      `User ${newState.member.user.tag} has joined the voice channel ${newState.channel.name}`
+      `User ${newState.member.user.tag} has joined the voice channel ${newState.channel.name} at ${newState.channelId}`
     );
     //print current time stamp
     joinTime = new Date().getTime();
@@ -59,9 +59,6 @@ client.on("voiceStateUpdate", (oldState, newState) => {
     console.log(new Date().getDay());
   }
   if (oldState.channel && !newState.channel) {
-    console.log(
-      `User ${oldState.member.user.tag} has left the voice channel ${oldState.channel.name}`
-    );
     leaveTime = new Date().getTime();
     //time in seconds
     console.log("time spent in seconds : ");
