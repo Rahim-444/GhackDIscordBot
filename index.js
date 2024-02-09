@@ -142,5 +142,36 @@ async function startServer() {
     console.log(error);
   }
 }
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// function that creates a poll to choose between two input times
+async function createPoll(time1, time2) {
+  let channelId = "1205259580406505535";
+  const targetChannel = client.channels.cache.get(channelId);
+  let question = `Which time works best for you? ${time1} or ${time2}?`;
+  // Send the poll question
+  targetChannel.send(question).then(async (message) => {
+    // React with thumbs up and thumbs down emojis
+    message.react("👍").then(() => message.react("👎"));
+    //count the numberr of likes and dislikes
+    let likes = 0;
+    let dislikes = 0;
+    await sleep(10000);
+    targetChannel.messages
+      .fetch(message.id)
+      .then((message) => {
+        message.reactions.cache.each((reaction) => {
+          console.log(
+            `Emoji: ${reaction.emoji.name}, Count: ${reaction.count}`,
+          );
+        });
+      })
+      .catch(console.error);
+
+    console.log(`Likes: ${likes}, Dislikes: ${dislikes}`);
+  });
+}
 
 client.login(process.env.TOKEN);
