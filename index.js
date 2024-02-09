@@ -51,7 +51,7 @@ app.get("/online", (req, res) => {
           result[role] = count;
         });
 
-        console.log(JSON.stringify(result, null, 2));
+        console.log("dergana:------",JSON.stringify(result, null, 2));
         const from_db = await onlineMember.create(result);//todo
       })
       .catch(console.error);
@@ -74,8 +74,9 @@ app.get("/getUsersInVoice", (req, res) => {
         });
 
         console.log(JSON.stringify(result, null, 2));
+        
         const from_db = await voice.create(result);//todo rah l db
-        console.log('from db:',from_db)
+        // console.log('from db:',from_db)
         console.log("Total users in voice: " + counter);
       })
       .catch((error) => {
