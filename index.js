@@ -13,9 +13,6 @@ const client = new Client({
 
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
-});
-
-client.on("messageCreate", (message) => {
   let roleCounts = new Map();
 
   client.guilds.cache.each((guild) => {
@@ -42,7 +39,8 @@ client.on("messageCreate", (message) => {
       .catch(console.error);
   });
 });
-let voiceTimes = new Map();
+
+client.on("messageCreate", (message) => {});
 let joinTime;
 client.on("voiceStateUpdate", (oldState, newState) => {
   let leaveTime;
@@ -50,7 +48,6 @@ client.on("voiceStateUpdate", (oldState, newState) => {
     console.log(
       `User ${newState.member.user.tag} has joined the voice channel ${newState.channel.name} at ${newState.channelId}`
     );
-    //print current time stamp
     joinTime = new Date().getTime();
     //The `getDay()` method returns the day of the week for the specified date according to local time, where 0 represents Sunday, 1 represents Monday, and so on up to 6 for Saturday.
     //The `getDate()` method returns the day of the month for the specified date according to local time, as a number between 1 and 31.
@@ -61,8 +58,9 @@ client.on("voiceStateUpdate", (oldState, newState) => {
   if (oldState.channel && !newState.channel) {
     leaveTime = new Date().getTime();
     //time in seconds
+    let timeInSeconds = (leaveTime - joinTime) / 1000;
     console.log("time spent in seconds : ");
-    console.log((leaveTime - joinTime) / 1000);
+    console.log(timeInSeconds);
     let guild = client.guilds.cache.first();
     guild.members
       .fetch(oldState.id)
