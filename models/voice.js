@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const usersInVoiceSchema = new mongoose.Schema(
   {
-    anotherone: {
+    voiceChat: {
       type: Number,
     },
   },

@@ -12,6 +12,7 @@ require("dotenv").config();
 const connectDB = require("./db/connect");
 const voice = require("./models/voice");
 const meet = require("./models/meet");
+const votes = require("./models/votes");
 const onlineMember = require("./models/onlineMembers");
 
 // set up express
@@ -147,31 +148,47 @@ function sleep(ms) {
 }
 
 // function that creates a poll to choose between two input times
-async function createPoll(time1, time2) {
-  let channelId = "1205259580406505535";
-  const targetChannel = client.channels.cache.get(channelId);
-  let question = `Which time works best for you? ${time1} or ${time2}?`;
-  // Send the poll question
-  targetChannel.send(question).then(async (message) => {
-    // React with thumbs up and thumbs down emojis
-    message.react("👍").then(() => message.react("👎"));
-    //count the numberr of likes and dislikes
-    let likes = 0;
-    let dislikes = 0;
-    await sleep(10000);
-    targetChannel.messages
-      .fetch(message.id)
-      .then((message) => {
-        message.reactions.cache.each((reaction) => {
-          console.log(
-            `Emoji: ${reaction.emoji.name}, Count: ${reaction.count}`,
-          );
-        });
-      })
-      .catch(console.error);
+app.post("/create-poll", async (req, res) => {
+  try {
+    let result = { "👍": 0, "👎": 0 };
+    const { time1, time2 } = req.body;
+    let channelId = process.env.CHANNEL_ID;
+    const targetChannel = client.channels.cache.get(channelId);
+    let question = `Which time works best for you? ${time1} or ${time2}?`;
 
-    console.log(`Likes: ${likes}, Dislikes: ${dislikes}`);
-  });
-}
+    // Send the poll question
+    const message = await targetChannel.send(question);
+
+    // React with thumbs up and thumbs down emojis
+    await message.react("👍");
+    await message.react("👎");
+
+    // Wait for reactions to be collected
+    await sleep(5000);
+
+    // Fetch the message to get the updated reaction counts
+    const fetchedMessage = await targetChannel.messages.fetch(message.id);
+
+    fetchedMessage.reactions.cache.forEach((reaction) => {
+      // Update the counters based on the reaction
+      result[reaction.emoji.name] = reaction.count;
+    });
+
+    console.log(result);
+
+    // Create the new vote with the correct data
+    const newVote = await votes.create({
+      yes: result["👍"],
+      no: result["👎"],
+    });
+
+    console.log(newVote);
+
+    res.status(200).json({ msg: "created", newVote });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "internal server error" });
+  }
+});
 
 client.login(process.env.TOKEN);
