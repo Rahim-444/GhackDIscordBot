@@ -25,7 +25,6 @@ start();
 
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
-  createPoll("12:00", "1:00");
 });
 
 // Post a meeting
@@ -160,7 +159,7 @@ async function createPoll(time1, time2) {
       .then((message) => {
         message.reactions.cache.each((reaction) => {
           console.log(
-            `Emoji: ${reaction.emoji.name}, Count: ${reaction.count}`
+            `Emoji: ${reaction.emoji.name}, Count: ${reaction.count}`,
           );
         });
       })
@@ -172,5 +171,5 @@ async function createPoll(time1, time2) {
 
 client.login(
   // eslint-disable-next-line no-undef
-  process.env.TOKEN
+  process.env.TOKEN,
 );
