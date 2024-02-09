@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 
-const meetScheema = new mongoose.Schema({
-  title: {
-    type: String,
+const meetScheema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+    },
   },
-  // startTime: {
-  //   type: Date,
-  // },
-},{timestamps:true});
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("meet", meetScheema);

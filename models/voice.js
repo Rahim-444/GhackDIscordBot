@@ -1,9 +1,12 @@
 const mongoose = require("mongoose");
 
-const voiceScheema = new mongoose.Schema({
-  anotherone: {
-    type: Number,
+const usersInVoiceSchema = new mongoose.Schema(
+  {
+    anotherone: {
+      type: Number,
+    },
   },
-},{timestamps:true});
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("vois", voiceScheema);
+module.exports = mongoose.model("usersInVoice", usersInVoiceSchema);

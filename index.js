@@ -1,15 +1,24 @@
+/* eslint-disable no-undef */
+
+// Dependecies
 const express = require("express");
 const { Client, IntentsBitField } = require("discord.js");
+const { exec } = require("child_process");
+
+// .env
 require("dotenv").config();
+
+//models
 const connectDB = require("./db/connect");
 const voice = require("./models/voice");
 const meet = require("./models/meet");
 const onlineMember = require("./models/onlineMembers");
-const { exec } = require("child_process");
 
+// set up express
 const app = express();
 const port = 3000;
 app.use(express.json());
+
 // Create a new client instance
 const client = new Client({
   intents: [
@@ -22,9 +31,10 @@ const client = new Client({
   ],
 });
 
-//
-start();
+// Starting the server
+startServer();
 
+// Starting the Bot
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
@@ -32,31 +42,30 @@ client.on("ready", () => {
 // Post a meeting
 app.post("/save-meeting", async (req, res) => {
   try {
-    console.log(req.body);
-
-    // Save the meeting to the database
+    // Create a new Instance of the meet and save it to the DB
     const newMeet = await meet.create({ title: req.body.title });
     if (!newMeet) {
       res.status(500).json({ msg: "internal server error" });
     }
     res.status(200).json({ msg: "created", newMeet });
-    console.log("our object:\n", newMeet);
+
+    // Checking how many users are in the meet after few minutes
     setTimeout(() => {
       exec(process.env.DISCORD_COMMAND);
     }, 5000);
+
     return res.status(201).json(newMeet);
   } catch (error) {
     res.status();
   }
 });
 
-// GET online members
+// GET online members in the server
 app.get("/online", (req, res) => {
   const result = {};
-  res.send("Online Members: ");
   try {
+    // get all the roles in the guild
     let roleCounts = new Map();
-
     client.guilds.cache.each((guild) => {
       guild.members
         .fetch()
@@ -73,11 +82,12 @@ app.get("/online", (req, res) => {
             }
           });
 
-          console.log("Online members by role:");
+          // Store each role with how many members are online
           roleCounts.forEach((count, role) => {
             result[role] = count;
           });
 
+          // Saving the number of active members in each role
           console.log(JSON.stringify(result, null, 2));
           await onlineMember.create(result);
         })
@@ -89,10 +99,12 @@ app.get("/online", (req, res) => {
   }
 });
 
+// get the active users in a voice chat
 app.get("/getUsersInVoice", (req, res) => {
   let counter = 0;
   const result = {};
-  res.send("getting users in voice");
+
+  res.send("getting users in voice ...");
   client.guilds.cache.each((guild) => {
     guild.members
       .fetch()
@@ -104,8 +116,8 @@ app.get("/getUsersInVoice", (req, res) => {
           }
         });
 
+        // Saving the number of active members in a all the voice chats in the guild
         console.log(JSON.stringify(result, null, 2));
-
         await voice.create(result);
         console.log("Total users in voice: " + counter);
       })
@@ -115,10 +127,14 @@ app.get("/getUsersInVoice", (req, res) => {
   });
 });
 
-async function start() {
+// This function will start the server
+async function startServer() {
   try {
-    // eslint-disable-next-line no-undef
+    console.log("Connecting to the DB ...");
     await connectDB(process.env.MONGO_URI);
+    console.log("Connected to the DB successfully :)");
+
+    // Start listening on the port 3000
     app.listen(port, () => {
       console.log(`app running on http://127.0.1.1:${port}`);
     });
@@ -127,7 +143,4 @@ async function start() {
   }
 }
 
-client.login(
-  // eslint-disable-next-line no-undef
-  process.env.TOKEN
-);
+client.login(process.env.TOKEN);
