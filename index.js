@@ -3,9 +3,9 @@ const { Client, IntentsBitField } = require("discord.js");
 require("dotenv").config();
 const connectDB = require("./db/connect");
 const voice = require("./models/voice");
+const meet = require("./models/meet");
 const onlineMember = require("./models/onlineMembers");
-const hedda =require('./controllers/hedda')
-const {exec} =require('child_process')
+const { exec } = require("child_process");
 
 const app = express();
 const port = 3000;
@@ -21,7 +21,8 @@ const client = new Client({
     IntentsBitField.Flags.GuildVoiceStates,
   ],
 });
-const meet = require("./models/meet");
+
+//
 start();
 
 client.on("ready", () => {
@@ -29,22 +30,21 @@ client.on("ready", () => {
 });
 
 // Post a meeting
-app.post("/save-meeting",hedda, async (req, res) => {
+app.post("/save-meeting", async (req, res) => {
   try {
     console.log(req.body);
 
     // Save the meeting to the database
-    const pi = await meet.create({ title: req.body.title });
-    if(!pi){
-      res.status(500).json({msg:"internal server error"})
+    const newMeet = await meet.create({ title: req.body.title });
+    if (!newMeet) {
+      res.status(500).json({ msg: "internal server error" });
     }
-    res.status(200).json({msg:"created",pi});
-    console.log("our object:\n", pi);
-     setInterval(() => {
-      exec("curl http://127.0.1.1:3000/getUsersInVoice") 
-    
-     }, 1000);
-    return res.status(201).json(newMeeting);
+    res.status(200).json({ msg: "created", newMeet });
+    console.log("our object:\n", newMeet);
+    setTimeout(() => {
+      exec(process.env.DISCORD_COMMAND);
+    }, 5000);
+    return res.status(201).json(newMeet);
   } catch (error) {
     res.status();
   }
@@ -110,7 +110,6 @@ app.get("/getUsersInVoice", (req, res) => {
         console.log("Total users in voice: " + counter);
       })
       .catch((error) => {
-        res.statusCode(500);
         console.error("Error fetching members:", error);
       });
   });
