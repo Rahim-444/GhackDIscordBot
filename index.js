@@ -28,50 +28,75 @@ client.on("ready", () => {
 });
 
 // Post a meeting
-app.post("/save-meeting", async (req) => {
-  const { title, startTime } = req.body;
+app.post("/save-meeting", async (req, res) => {
+  try {
+    const { title, startTime } = req.body;
 
-  const newMeeting = new Meet({
-    title,
-    StartTime: new Date(startTime),
-  });
+    const newMeeting = new Meet({
+      title,
+      StartTime: new Date(startTime),
+    });
 
-  // Save the meeting to the database
-  await newMeeting.save();
+    // Save the meeting to the database
+    await newMeeting.save();
+    setInterval(() => {
+      fetch(`http://127.0.1.1:${port}/getUsersInVoice`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log(data);
+        })
+        .catch((error) => {
+          console.error("Fetch error:", error);
+        });
+    }, 1000);
+    return res.status(201).json(newMeeting);
+  } catch (error) {
+    res.status();
+  }
 });
 
 // GET online members
-app.get("/online", (res) => {
+app.get("/online", (req, res) => {
   const result = {};
   res.send("Online Members: ");
-  let roleCounts = new Map();
+  try {
+    let roleCounts = new Map();
 
-  client.guilds.cache.each((guild) => {
-    guild.members
-      .fetch()
-      .then(async (members) => {
-        members.each((member) => {
-          if (member.presence && member.presence.status === "online") {
-            member.roles.cache.each((role) => {
-              if (roleCounts.has(role.name)) {
-                roleCounts.set(role.name, roleCounts.get(role.name) + 1);
-              } else {
-                roleCounts.set(role.name, 1);
-              }
-            });
-          }
-        });
+    client.guilds.cache.each((guild) => {
+      guild.members
+        .fetch()
+        .then(async (members) => {
+          members.each((member) => {
+            if (member.presence && member.presence.status === "online") {
+              member.roles.cache.each((role) => {
+                if (roleCounts.has(role.name)) {
+                  roleCounts.set(role.name, roleCounts.get(role.name) + 1);
+                } else {
+                  roleCounts.set(role.name, 1);
+                }
+              });
+            }
+          });
 
-        console.log("Online members by role:");
-        roleCounts.forEach((count, role) => {
-          result[role] = count;
-        });
+          console.log("Online members by role:");
+          roleCounts.forEach((count, role) => {
+            result[role] = count;
+          });
 
-        console.log(JSON.stringify(result, null, 2));
-        await onlineMember.create(result);
-      })
-      .catch(console.error);
-  });
+          console.log(JSON.stringify(result, null, 2));
+          await onlineMember.create(result);
+        })
+        .catch(console.error);
+    });
+  } catch (error) {
+    res.status(500);
+    console.log(error);
+  }
 });
 
 app.get("/getUsersInVoice", (res) => {
@@ -95,6 +120,7 @@ app.get("/getUsersInVoice", (res) => {
         console.log("Total users in voice: " + counter);
       })
       .catch((error) => {
+        res.statusCode(500);
         console.error("Error fetching members:", error);
       });
   });
