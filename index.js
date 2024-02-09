@@ -3,7 +3,8 @@ const { Client, IntentsBitField } = require("discord.js");
 require("dotenv").config();
 const connectDB = require("./db/connect");
 const voice=require('./models/voice')
-
+const onlineMember=require('./models/onlineMembers')
+const emptyObject = new Object();
 const app = express();
 const port = 3000;
 
@@ -32,7 +33,7 @@ app.get("/online", (req, res) => {
   client.guilds.cache.each((guild) => {
     guild.members
       .fetch()
-      .then((members) => {
+      .then(async(members) => {
         members.each((member) => {
           if (member.presence && member.presence.status === "online") {
             member.roles.cache.each((role) => {
@@ -51,6 +52,7 @@ app.get("/online", (req, res) => {
         });
 
         console.log(JSON.stringify(result, null, 2));
+        const from_db = await onlineMember.create(result);//todo
       })
       .catch(console.error);
   });
