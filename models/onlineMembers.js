@@ -13,6 +13,6 @@ const onlineMemberScheema = new mongoose.Schema({
   admin: {
     type: Number,
   },
-});
+},{timestamps:true});
 
 module.exports = mongoose.model("onlineMember", onlineMemberScheema);

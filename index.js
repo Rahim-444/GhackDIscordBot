@@ -4,11 +4,12 @@ require("dotenv").config();
 const connectDB = require("./db/connect");
 const voice = require("./models/voice");
 const onlineMember = require("./models/onlineMembers");
-const Meet = require("./models/meet");
+const hedda =require('./controllers/hedda')
+const {exec} =require('child_process')
 
 const app = express();
 const port = 3000;
-
+app.use(express.json());
 // Create a new client instance
 const client = new Client({
   intents: [
@@ -20,7 +21,7 @@ const client = new Client({
     IntentsBitField.Flags.GuildVoiceStates,
   ],
 });
-
+const meet = require("./models/meet");
 start();
 
 client.on("ready", () => {
@@ -28,32 +29,21 @@ client.on("ready", () => {
 });
 
 // Post a meeting
-app.post("/save-meeting", async (req, res) => {
+app.post("/save-meeting",hedda, async (req, res) => {
   try {
-    const { title, startTime } = req.body;
-
-    const newMeeting = new Meet({
-      title,
-      StartTime: new Date(startTime),
-    });
+    console.log(req.body);
 
     // Save the meeting to the database
-    await newMeeting.save();
-    setInterval(() => {
-      fetch(`http://127.0.1.1:${port}/getUsersInVoice`)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((data) => {
-          console.log(data);
-        })
-        .catch((error) => {
-          console.error("Fetch error:", error);
-        });
-    }, 1000);
+    const pi = await meet.create({ title: req.body.title });
+    if(!pi){
+      res.status(500).json({msg:"internal server error"})
+    }
+    res.status(200).json({msg:"created",pi});
+    console.log("our object:\n", pi);
+     setInterval(() => {
+      exec("curl http://127.0.1.1:3000/getUsersInVoice") 
+    
+     }, 1000);
     return res.status(201).json(newMeeting);
   } catch (error) {
     res.status();
@@ -99,7 +89,7 @@ app.get("/online", (req, res) => {
   }
 });
 
-app.get("/getUsersInVoice", (res) => {
+app.get("/getUsersInVoice", (req, res) => {
   let counter = 0;
   const result = {};
   res.send("getting users in voice");
