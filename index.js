@@ -2,9 +2,10 @@ const express = require("express");
 const { Client, IntentsBitField } = require("discord.js");
 require("dotenv").config();
 const connectDB = require("./db/connect");
-const voice=require('./models/voice')
-const onlineMember=require('./models/onlineMembers')
-const emptyObject = new Object();
+const voice = require("./models/voice");
+const onlineMember = require("./models/onlineMembers");
+const Meet = require("./models/meet");
+
 const app = express();
 const port = 3000;
 
@@ -20,12 +21,27 @@ const client = new Client({
   ],
 });
 
+start();
+
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
+// Post a meeting
+app.post("/save-meeting", async (req) => {
+  const { title, startTime } = req.body;
+
+  const newMeeting = new Meet({
+    title,
+    StartTime: new Date(startTime),
+  });
+
+  // Save the meeting to the database
+  await newMeeting.save();
+});
+
 // GET online members
-app.get("/online", (req, res) => {
+app.get("/online", (res) => {
   const result = {};
   res.send("Online Members: ");
   let roleCounts = new Map();
@@ -33,7 +49,7 @@ app.get("/online", (req, res) => {
   client.guilds.cache.each((guild) => {
     guild.members
       .fetch()
-      .then(async(members) => {
+      .then(async (members) => {
         members.each((member) => {
           if (member.presence && member.presence.status === "online") {
             member.roles.cache.each((role) => {
@@ -51,21 +67,21 @@ app.get("/online", (req, res) => {
           result[role] = count;
         });
 
-        console.log("dergana:------",JSON.stringify(result, null, 2));
-        const from_db = await onlineMember.create(result);//todo
+        console.log(JSON.stringify(result, null, 2));
+        await onlineMember.create(result);
       })
       .catch(console.error);
   });
 });
 
-app.get("/getUsersInVoice", (req, res) => {
+app.get("/getUsersInVoice", (res) => {
   let counter = 0;
   const result = {};
   res.send("getting users in voice");
   client.guilds.cache.each((guild) => {
     guild.members
       .fetch()
-      .then(async(members) => {
+      .then(async (members) => {
         members.forEach((member) => {
           if (member.voice.channel) {
             counter++;
@@ -74,9 +90,8 @@ app.get("/getUsersInVoice", (req, res) => {
         });
 
         console.log(JSON.stringify(result, null, 2));
-        
-        const from_db = await voice.create(result);//todo rah l db
-        // console.log('from db:',from_db)
+
+        await voice.create(result);
         console.log("Total users in voice: " + counter);
       })
       .catch((error) => {
@@ -85,33 +100,17 @@ app.get("/getUsersInVoice", (req, res) => {
   });
 });
 
-app.get("/joiningDate", () => {
-  let joinTime;
-  client.on("voiceStateUpdate", (oldState, newState) => {
-    let leaveTime;
-    if (!oldState.channel && newState.channel) {
-      console.log(
-        `User ${newState.member.user.tag} has joined the voice channel ${newState.channel.name} at ${newState.channelId}`
-      );
-      joinTime = new Date().getTime();
-      console.log("Day of the week (5 means friday) :");
-      console.log(new Date().getDay());
-    }
-  });
-});
-
-
 async function start() {
   try {
-    await connectDB(process.env.MONGO_URI); 
+    // eslint-disable-next-line no-undef
+    await connectDB(process.env.MONGO_URI);
     app.listen(port, () => {
-      console.log(`Example app listening on port ${port}`);
+      console.log(`app running on http://127.0.1.1:${port}`);
     });
   } catch (error) {
     console.log(error);
   }
 }
-start();
 
 client.login(
   // eslint-disable-next-line no-undef
