@@ -4,9 +4,9 @@ const meetScheema = new mongoose.Schema({
   title: {
     type: String,
   },
-  StartTime: {
-    type: Date,
-  },
-});
+  // startTime: {
+  //   type: Date,
+  // },
+},{timestamps:true});
 
 module.exports = mongoose.model("meet", meetScheema);
