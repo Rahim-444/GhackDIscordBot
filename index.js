@@ -4,7 +4,7 @@
 const express = require("express");
 const { Client, IntentsBitField } = require("discord.js");
 const { exec } = require("child_process");
-
+const cors = require("cors")
 const router=require('./routes/dataToRoute')
 const {getAllMeets}=require('./controllers/dataToFron')
 
@@ -19,14 +19,14 @@ const meet = require("./models/meet");
 const votes = require("./models/votes");
 const onlineMember = require("./models/onlineMembers");
 
-// set up express
+// set up express      
 const app = express();
 
 
 
 const port = 3000;
 app.use(express.json());
-
+app.use(cors())
 //todo back to front:start
 app.use("/api/v1",router);
 //todo back to front:end
