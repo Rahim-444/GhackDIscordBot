@@ -46,3 +46,10 @@ bun install
 ```bash
 bun start
 ```
+
+5. End points
+   - /online/: [GET]: get all the online members from the guild
+   - /save-meeting/: [POST]: save the meeting info
+   - /getUsersInVoice/: [GET]: get all the users in a given voice channel, and this can be done manually by requesting:
+     /save-meeting; in this case it will be called after few minutes
+   - /create-poll/: this allows you to create poll and get the votes, this can be used to send announcements as well.
