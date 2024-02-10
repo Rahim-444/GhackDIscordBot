@@ -4,10 +4,9 @@
 const express = require("express");
 const { Client, IntentsBitField } = require("discord.js");
 const { exec } = require("child_process");
-const cors = require("cors")
-const router=require('./routes/dataToRoute')
-const {getAllMeets}=require('./controllers/dataToFron')
-
+const cors = require("cors");
+const router = require("./routes/dataToRoute");
+const { getAllMeets } = require("./controllers/dataToFron");
 
 // .env
 require("dotenv").config();
@@ -18,17 +17,16 @@ const voice = require("./models/voice");
 const meet = require("./models/meet");
 const votes = require("./models/votes");
 const onlineMember = require("./models/onlineMembers");
+const { time } = require("console");
 
-// set up express      
+// set up express
 const app = express();
 
-
-
-const port = 3000;
+const port = 3001;
 app.use(express.json());
-app.use(cors())
+app.use(cors());
 //todo back to front:start
-app.use("/api/v1",router);
+app.use("/api/v1", router);
 //todo back to front:end
 
 // Create a new client instance
@@ -148,7 +146,7 @@ async function startServer() {
 
     // Start listening on the port 3000
     app.listen(port, () => {
-      console.log(`app running on http://127.0.1.1:${port}`);
+      console.log(`app running on http://localhost:${port}`);
     });
   } catch (error) {
     console.log(error);
@@ -161,8 +159,10 @@ function sleep(ms) {
 // function that creates a poll to choose between two input times
 app.post("/create-poll", async (req, res) => {
   try {
+    console.log(req.body);
     let result = { "👍": 0, "👎": 0 };
     const { time1, time2 } = req.body;
+    console.log("hello ", time1, time2);
     let channelId = process.env.CHANNEL_ID;
     const targetChannel = client.channels.cache.get(channelId);
     let question = `Which time works best for you? ${time1} or ${time2}?`;
@@ -198,7 +198,7 @@ app.post("/create-poll", async (req, res) => {
     res.status(200).json({ msg: "created", newVote });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ msg: "internal server error" });
+    res.status(500).json({ msg: error.message });
   }
 });
 
